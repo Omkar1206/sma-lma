@@ -30,14 +30,16 @@ long_window = st.sidebar.number_input("Long Moving Average (LMA)", min_value=10,
 # ---- Fetch Data ----
 @st.cache_data
 def load_data(stock, start, end):
-    df = yf.download(stock, start=start, end=end)
-    return df
+    try:
+        df = yf.download(stock, start=start, end=end, progress=False)
+        if df.empty:
+            st.warning("No data found for this stock or date range.")
+        return df
+    except Exception as e:
+        st.error(f"Error fetching data: {e}")
+        return pd.DataFrame()
 
-df = load_data(stock_name, start_date, end_date)
 
-if df.empty:
-    st.warning("No data found. Please check the stock symbol or date range.")
-    st.stop()
 
 # ---- Calculate SMA and Signals ----
 df[f"SMA_{short_window}"] = df["Close"].rolling(window=short_window).mean()
